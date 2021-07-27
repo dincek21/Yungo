@@ -8,6 +8,7 @@
         <link rel="stylesheet" href="{{ asset('css/app.css') }}">
         <link href="{{ asset('css/tailwind.min.css') }}" rel="stylesheet">
         <link href="{{ asset('css/jquery.dataTables.min.css') }}" rel="stylesheet">
+        <link rel="stylesheet" href="{{ asset('css/jquery.sweet-modal.min.css') }}" />
         <script src="{{ asset('js/jquery-3.6.0.js') }}"></script>
         <script src="{{ asset('js/dataTables.js') }}"></script>
         <script src="{{ asset('js/chart.js') }}"> </script>
@@ -15,12 +16,13 @@
         <script src="https://cdn.datatables.net/buttons/1.7.1/js/dataTables.buttons.min.js"></script>
         <script src="http://cdn.datatables.net/plug-ins/1.10.15/dataRender/datetime.js"></script>
         <script src="http://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+        <script src="{{ asset('js/jquery.sweet-modal.min.js') }}"></script>
         {% block stylesheets %}
             {#{{ encore_entry_link_tags('app') }}#}
         {% endblock %}
 
         {% block javascripts %}
-            {#{{ encore_entry_script_tags('app') }}#}
+        
         {% endblock %}
     </head>
     <body>
@@ -45,7 +47,7 @@
                             <div class="text-blue-400 flex relative px-4 hover:bg-gray-700 cursor-pointer">
                                 
                                 <div class="flex-auto my-1">
-                                    <a ><span>Perfil</span></a>
+                                    <a href="/usuario"><span>Perfil</span></a>
                                 </div>
                             </div>
                             <div class="text-blue-400 flex relative px-4 hover:bg-gray-700 cursor-pointer">
