@@ -1,70 +1,123 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello TicketsController!{% endblock %}
+{% block title %}Tickets{% endblock %}
 
 {% block body %}
-<div class="pageHeader">
-    <div class="overflow-hidden flex flex-shrink p-4 md:flex-shrink-0">
-      <div class="flex space-x-2 box-border ">
-        <p class="font-sans text-xl">Tickets</p>
-        <form action="/tickets/create">
-          <input type="submit"  value="+"class="bg-blue-500 hover:bg-blue-700 text-white py-1 px-3 rounded focus:ring-2">
-        </form>
-      </div>
-    </div>
+<div class="overflow-hidden flex flex-shrink p-4 md:flex-shrink-0">
+  <div style="width:1320px; margin:0 auto; ">
+    <span style="font-size:38px;font-family: "Gill Sans Extrabold", Helvetica, sans-serif">Tickets</span>
+  </div>
 </div>
 <div class= "overflow-hidden flex items-center justify-center" >
-    <div class="flex items-center justify-center">
+    <div class="shadow overflow-hidden sm:rounded-md bg-white" style="margin-top:3px;margin-bottom:3px;padding:10px">
         <div class="inset-x-0 bottom-0">
-             <table id="tabla-tickets" class="">
+           <div style="position:relative;z-index:1;margin-bottom: 10px">
+              <button onclick="clientSelector()" class="hover:bg-green-400 bg-green-500 text-white font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded">
+                  nuevo ticket
+              </button>
+           </div>
+           <table id="tabla-tickets" class="">
                 <thead class="text-white">
-                    <tr class="bg-teal-400 flex flex-col flex-no wrap sm:table-row rounded-l-lg sm:rounded-none mb-2 sm:mb-0">
+                    <tr style=" background-color:#1DABE0" class="block text-sm font-medium  bold flex flex-col flex-no wrap sm:table-row rounded-l-lg sm:rounded-none mb-2 sm:mb-0">
                         <th class="p-3 text-left"></th>
                         <th class="p-3 text-left"></th>
                         <th class="p-3 text-left"></th>
-                        <th class="p-3 text-left"></th>
-                        <th class="p-3 text-left"></th>
-                        <th class="p-3 text-left"></th>
+                        <th class="p-3 text-left"></th> 
+                        <th class="p-3 text-left"></th> 
+                        <th class="p-3 text-left"></th> 
                     </tr>  
                 </thead>
+             <tfoot>
+             <tr>
+               <th class="p-3 text-left"></th>
+               <th class="p-3 text-left"></th>
+               <th class="p-3 text-left"></th>
+               <th class="p-3 text-left"></th>
+               <th class="p-3 text-left"></th>
+               <th class="p-3 text-left"></th>
+             </tr>
+             </tfoot>
             </table>
         </div>
     </div>
-   
 </div>
 <script>
 $(document).ready(function() {
-    var dataSet = "{{ response }}";  
-    var dataSetRemove = JSON.parse(dataSet.replace(/&quot;/g,'"')); 
-    var table = $('#tabla-tickets').DataTable( {
+    let dataSet = "{{ response }}";
+    let dataSetRemove = JSON.parse(dataSet.replace(/&quot;/g,'"'));
+    let table = $('#tabla-tickets').DataTable( {
+        initComplete: function () {
+            this.api().columns([1, 4]).every( function () {
+                let column = this;
+                let select = $('<select><option value=""></option></select>')
+                    .appendTo( $(column.footer()).empty() )
+                    .on( 'change', function () {
+                        let val = $.fn.dataTable.util.escapeRegex(
+                            $(this).val()
+                        );
+
+                        column
+                            .search( val ? '^'+val+'$' : '', true, false )
+                            .draw();
+                    } );
+                column.data().unique().sort().each( function ( d, j ) {
+                    select.append( '<option value="'+d+'">'+d+'</option>' )
+                } );
+            } );
+
+        },
         data: dataSetRemove,
         "bLengthChange": false,
         "bFilter": true,
         "bInfo": false,
         "bAutoWidth": false ,
+        language: {
+          'paginate': {
+            'previous': '<button class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r rounded-l">Prev</button>',
+            'next':'<button class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r rounded-l">Next</button>'
+          },
+          searchPlaceholder: "Buscar...",
+        },
         columns: [
             { title: "#", width: 100 },
-            { title: "Tipo", width: 100 },
+            { title: "Tipo", width: 200 },
             { title: "Fecha", width: 300 },
-            { title: "Descripcion", width: 100 },
+            { title: "Descripcion", width: 300 },
             { title: "Estado", width: 100 },
-            { title: "Acciones", width: 100}, 
-           
+            { title: "", width: 100},
         ], 
         "columnDefs": [ {
             "targets": -1,
             "data": null,
             "defaultContent": "<button id='view' class='view bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>Revisar</button>"
-                              
         } ]
-        
     } );
-    $('#tabla-tickets tbody').on( 'click', 'button', function () {
-        var data = table.row( $(this).parents('tr') ).data();
-       
+    let input = $('#tabla-tickets_filter label input');
+    $("#tabla-tickets_filter label").html('').append();
+    $('#tabla-tickets tbody').on( 'click','button', function () {
+        let action = this.id;
+        let data = table.row( $(this).parents('tr') ).data();
+        if (action==='view')
         window.location.href = "/tickets/show/"+data[0];
     } );
 } );
+
+  function clientSelector() {
+      $.ajax({
+          type: 'POST',
+          url: '/tickets/selector',
+          dataType: 'json',
+          success: function(response) {
+              if(response.status){
+                  $.sweetModal({
+                      title: 'Clientes',
+                      content: response.msg,
+                      width: '1000px',
+                  });
+              }
+          },
+      });
+  }
 </script>
 <style>
     html,
@@ -72,7 +125,7 @@ $(document).ready(function() {
       height: 100%;
     }
     #tabla-tickets_wrapper{
-      max-width:900px;
+      max-width:1320px;
     }
     @media (min-width: 640px) {
       table {
@@ -85,8 +138,16 @@ $(document).ready(function() {
     td:not(:last-child) {
       border-bottom: 0;
     }
-    th:not(:last-child) {
-      border-bottom: 2px solid rgba(0, 0, 0, .1);
+
+     #tabla-tickets_filter{
+      margin-bottom:10px;
     }
+
+    #tabla-tickets_filter input, #tabla-clientes_filter input{
+      border-radius:10px;
+      background-color:#FaFaFa; 
+      padding:10px;
+    }
+    .sweet-modal-box {top:18% !important;}
   </style>
 {% endblock %}

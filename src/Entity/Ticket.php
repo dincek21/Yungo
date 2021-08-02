@@ -46,9 +46,18 @@ class Ticket
     private $fkClient;
 
     /**
-     * @ORM\OneToMany(targetEntity=Comentarios::class, mappedBy="fkTicket")
+     * @ORM\OneToMany(targetEntity=Comentarios::class, mappedBy="fkTicket", cascade={"persist", "remove"})
      */
     private $comentarios;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Servicio::class, inversedBy="tickets")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $service;
+
+
+
 
     public function __construct()
     {
@@ -149,4 +158,20 @@ class Ticket
 
         return $this;
     }
+
+    public function getService(): ?Servicio
+    {
+        return $this->service;
+    }
+
+    public function setService(?Servicio $service): self
+    {
+        $this->service = $service;
+
+        return $this;
+    }
+
+
+
+
 }

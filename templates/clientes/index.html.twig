@@ -1,24 +1,24 @@
 {% extends 'base.html.twig' %}
-
-{% block title %}Hello ClientesController!{% endblock %}
-
+{% block title %}Clientes{% endblock %}
 {% block body %}
-<div class="pageHeader">
-  <div class="overflow-hidden flex flex-shrink p-4 md:flex-shrink-0">
-    <div class="flex space-x-2 box-border ">
-      <p class="font-sans text-xl">Clientes</p>
-      <form action="/clientes/create">
-        <input type="submit"  value="+" class="bg-blue-500 hover:bg-blue-700 text-white py-1 px-3 rounded focus:ring-2">
-      </form>
-    </div>
+<div class="overflow-hidden flex flex-shrink p-4 md:flex-shrink-0">
+  <div style="width:1320px; margin:0 auto; ">
+    <span style="font-size:38px;font-family: "Gill Sans Extrabold", Helvetica, sans-serif">Clientes</span>
   </div>
 </div>
 <div class= "overflow-hidden flex items-center justify-center" >
-    <div class="flex items-center justify-center">
+    <div class="shadow overflow-hidden sm:rounded-md bg-white" style="margin-top:3px;margin-bottom:3px;padding:10px">
         <div class="inset-x-0 bottom-0">
+           <div style="position:absolute;z-index:1">
+            <a href="/clientes/create">
+              <button class="hover:bg-green-400 bg-green-500 text-white font-semibold hover:text-white py-2 px-4 border border-green-500 hover:border-transparent rounded">
+                 nuevo cliente
+              </button>
+            </a>
+           </div>
            <table id="tabla-clientes" class="">
                 <thead class="text-white">
-                    <tr class="bg-teal-400 flex flex-col flex-no wrap sm:table-row rounded-l-lg sm:rounded-none mb-2 sm:mb-0">
+                    <tr style=" background-color:#1DABE0" class="block text-sm font-medium  bold flex flex-col flex-no wrap sm:table-row rounded-l-lg sm:rounded-none mb-2 sm:mb-0">
                         <th class="p-3 text-left"></th>
                         <th class="p-3 text-left"></th>
                         <th class="p-3 text-left"></th>
@@ -32,10 +32,18 @@
 </div>
 <script>
 $(document).ready(function() {
-    var dataSet = "{{ response }}";  
-    var dataSetRemove = JSON.parse(dataSet.replace(/&quot;/g,'"')); 
-    var table = $('#tabla-clientes').DataTable( {
+    let dataSet = "{{ response }}";
+    let dataSetRemove = JSON.parse(dataSet.replace(/&quot;/g,'"'));
+    let table = $('#tabla-clientes').DataTable( {
+
         data: dataSetRemove,
+        language: {
+          'paginate': {
+            'previous': '<button class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r rounded-l">Prev</button>',
+            'next':'<button class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r rounded-l">Next</button>'
+          },
+          searchPlaceholder: "Buscar por nombre...",
+        },
         "bLengthChange": false,
         "bFilter": true,
         "bInfo": false,
@@ -45,29 +53,55 @@ $(document).ready(function() {
             { title: "Nombre", "width":300},
             { title: "Correo", "width":100 },
             { title: "Telefono", "width":100 },
-            { title: "Acciones", "width":300}, 
-        ], 
+            { title: "", "width":200},
+        ],
         "columnDefs": [ {
             "targets": -1,
             "data": null,
             "width": 300,
             "defaultContent": "<button id='view' class='view bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>Mostrar</button>"+
-                               "<button id='edit' class='view bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' style='margin-left:6px'>Editar</button>"+
-                               "<button id='delete' class='view bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded' style='margin-left:6px'>Eliminar</button>"
+                              "<button id='delete' class='view bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded' style='margin-left:6px'>Eliminar</button>"
         } ]
-        
     } );
-    $('#tabla-clientes tbody').on( 'click','button', function () {
-        var action = this.id;
-        var data = table.row( $(this).parents('tr') ).data();
-        if (action=='view')
-        window.location.href = "/clientes/show/"+data[0];
-        if(action == 'edit')
-        window.location.href = "/clientes/edit/"+data[0];
-        if(action == 'delete')
-        window.location.href = "/clientes/delete/"+data[0];
-        
+    let input = $('#tabla-clientes_filter label input');
+    $("#tabla-clientes_filter label").html('').append(input);
+    table.on( 'click','button', function () {
+        let action = this.id;
+        let is = $(this);
+        let row = table.row( is.parents('tr') );
+        let data = row.data();
+        if (action==='view'){
+            window.location.href = "/clientes/show/"+data[0];
+        }
+        if(action === 'delete'){
+            $.sweetModal.confirm('¿Seguro de eliminar?', function() {
+                $.ajax({
+                    type: 'POST',
+                    url: "/clientes/delete/"+data[0],
+                    dataType: 'json',
+                    success: function(a){
+                        if ($(row).hasClass('child')) {
+                            table.row($(row).prev('tr')).remove().draw();
+                        } else {
+                            table
+                                .row(is.parents('tr'))
+                                .remove()
+                                .draw();
+                        }
+                        $.sweetModal(a.msg);
+                    }
+                });
+            }, function(){
+                $.sweetModal('Se ha cancelado la eliminacion');
+            });
+        }
     } );
+    $('#tabla-clientes_filter  label input').on( 'focus', function () {
+        $(this).on("keyup", function() {
+            let value = $(this).val().toLowerCase();
+            table.columns(1).search(value).draw();
+        });
+    });
 } );
 </script>
 <style>
@@ -78,6 +112,9 @@ $(document).ready(function() {
     #tabla-clientes_wrapper{
       max-width:1320px
     }
+    #tabla-clientes_filter{
+      margin-bottom:10px;
+    }
     @media (min-width: 640px) {
       table {
         display: inline-table !important;
@@ -87,13 +124,16 @@ $(document).ready(function() {
         display: none;
       }
     }
-  
     td:not(:last-child) {
       border-bottom: 0;
     }
-  
     th:not(:last-child) {
       border-bottom: 2px solid rgba(0, 0, 0, .1);
+    }
+    #tabla-clientes_filter input{
+      border-radius:10px;
+      background-color:#FaFaFa; 
+      padding:10px;
     }
   </style>
 {% endblock %}
