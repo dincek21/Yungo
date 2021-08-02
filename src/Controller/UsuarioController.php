@@ -6,6 +6,7 @@ use App\Entity\Roles;
 use App\Entity\Usuario;
 use App\Form\PhotoType;
 use App\Form\UsuarioType;
+use Doctrine\ORM\Mapping\Id;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -15,7 +16,7 @@ use Symfony\Component\HttpFoundation\Request;
 class UsuarioController extends AbstractController
 {
     /**
-     * @Route("/usuario/create", name="usuario_create")
+     * @Route("/usuario/create", name="create_user")
      */
     public function createuser(Request $request)
     {
@@ -46,7 +47,7 @@ class UsuarioController extends AbstractController
             $em->persist($user);
             $em->flush();
 
-            return $this->redirectToRoute('usuario_create');
+            return $this->redirectToRoute('create_user');
         }
 
 
@@ -67,15 +68,16 @@ class UsuarioController extends AbstractController
 
 
     /**
-     * @Route("/usuario/", name="usuario")
+     * @Route("/usuario/personal/{id}", name="usuario")
      */
-    public function usuario(Request $request)
+    public function usuario($id,Request $request)
     {
         $users = $this->getDoctrine()
         ->getRepository(Usuario::class)
-        ->findOneBy(['id' => 1]);
+        ->findOneBy(['id' => $id]);
 
         return $this->render('usuario/index.html.twig', [
+            'id'        => $id,
             'name'      => $users->getNameUser()." ".$users->getLastnameUser(),
             'age'       => $users->getAgeUser(),
             'email'     => $users->getEmailUser(),
@@ -86,14 +88,13 @@ class UsuarioController extends AbstractController
     }
 
     /**
-     * @Route("usuario/editphoto", name="photo_new")
+     * @Route("usuario/editphoto/{id}", name="photo_new")
      */
-    public function photo( Request $request)
+    public function photo($id,Request $request)
     {
         $users = $this->getDoctrine()
         ->getRepository(Usuario::class)
-        ->findOneBy(['id'=>1]);
-
+        ->findOneBy(['id'=>$id]);
         
         $form = $this->createForm(PhotoType::class, $users);
         $form->handleRequest($request);
@@ -101,15 +102,18 @@ class UsuarioController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var UploadedFile $brochureFile */
             $img = $form['picture_user']->getData();
-            if($img){
+            if($img->guessExtension() == 'jpg' || $img->guessExtension() == 'jpeg'){
+
                 $originalFilename = pathinfo($img->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeFilename = transliterator_transliterate('Any-Latin; Latin-ASCII; [^A-Za-z0-9_] remove; Lower()', $originalFilename);
                 $newFilename = $safeFilename.'-'.uniqid().'.'.$img->guessExtension();
+
                 try {
                     $img->move(
-                        $this->getParameter('brochures_directory'),
+                    $this->getParameter('brochures_directory'),
                         $newFilename
                     );
+
                 } catch (FileException $e) {
                     // ... handle exception if something happens during file upload
                 }
@@ -129,9 +133,31 @@ class UsuarioController extends AbstractController
 
         return new JsonResponse([
             'html' =>$this->renderView('usuario/editphoto.html.twig', [
-            'form' => $form->createView(),
+                'id' => $id,
+                'form' => $form->createView(),
             ]),
         ]); 
         
     }
+
+    /**
+     * @Route("/usuario/consult", name="consultas")
+     */
+    public function consult($id, Request $request)
+    {
+        $users = $this->getDoctrine()
+        ->getRepository(Usuario::class)
+        ->findOneBy(['id' => $id]);
+
+        return $this->render('usuario/consult.html.twig', [
+            'id'        => $id,
+            'name'      => $users->getNameUser()." ".$users->getLastnameUser(),
+            'age'       => $users->getAgeUser(),
+            'email'     => $users->getEmailUser(),
+            'rol'       => $users->getFkRoles()->getrols(),
+            'gender'    => $users->getFkGender()->getGenders(),
+            'picture'   => $users->getPictureUser(),
+        ]);
+    }
+
 }
