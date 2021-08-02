@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Perfil{% endblock %}
+
+{% block body %}
+<div id="app" class="sm:mt-0 px-6">
+    <div class="md:grid md:grid-cols-6 md:gap-6 md:grid-rows-2 md:mt-5">
+
+        <div class="md:col-start-4 md:col-end-7">
+            <p class="text-center mt-1 font-mono text-xl font-bold relative">Registrar Usuario Nuevo</p>
+            <div class="grid gap-6 mb-8">
+                <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 md:overflow-y-auto md:h-72" id="comentarios">    
+                
+                    {{ form_start(form, { 'attr':{'id':'form-uploader'} } ) }}
+                        {{form_widget(form)}}
+                    {{form_end(form)}}
+                
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

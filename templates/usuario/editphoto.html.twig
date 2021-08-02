@@ -1,0 +1,43 @@
+<div>
+{{ form_start(form, {'attr' : { 'id' : 'form-changephoto'}}) }}
+{{ form_end(form) }}
+</di>
+
+<script>
+
+    $('#form-changephoto').on("submit",function(evento) {
+        dataform = new FormData(this);
+        evento.preventDefault();
+        $.sweetModal.confirm('Confirmacion', '¿Estas seguro?', function() {
+            $.ajax({
+                type: 'POST',
+                url: '{{path('photo_new')}}',
+                processData: false,
+                cache: false,
+                contentType: false,
+                data: dataform, 
+                dataType: 'json',
+                success: function(response) {
+                    $('#imagen').attr('src', '/img/'+response.image);
+                    if(response.status == true){
+
+                        $(".sweet-modal-close-link:last-child").click();
+                        $.sweetModal({
+                            content: 'Se ha cambiado la foto.',
+                            icon: $.sweetModal.ICON_SUCCESS,
+
+                        });
+                    }else if(response.status == false){
+
+                    }
+                },
+            });
+        }, function() {
+            $.sweetModal({
+                content: 'Se ha negado los cambios',
+                icon: $.sweetModal.ICON_ERROR,
+            });
+
+        });
+    });
+</script>
