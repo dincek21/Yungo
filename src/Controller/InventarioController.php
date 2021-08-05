@@ -3,34 +3,33 @@
 namespace App\Controller;
 
 use App\Form\InventaryType;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use App\Entity\Inventario;
-use App\Repository\InventarioRepository;
 use App\Form\NewInventaryType;
-use Omines\DataTablesBundle\Adapter\Doctrine\ORMAdapter;
-use Omines\DataTablesBundle\Column\TextColumn;
-use Omines\DataTablesBundle\Adapter\ArrayAdapter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Omines\DataTablesBundle\DataTableFactory;
-
 use Symfony\Component\Routing\Annotation\Route;
-
-
 
 class InventarioController extends AbstractController
 {
-    
+    protected $em;
+    /**
+     * @var EntityManagerInterface
+     */
+    public function  __construct(EntityManagerInterface $entityManager){
+       $this->em = $entityManager;
+    }
     /**
      * @Route("/inventario", name="inventario")
      */
-    public function index(Request $request, DataTableFactory $dataTableFactory): Response
+    public function index(): Response
     {
-        $inventario = $this->getDoctrine()
+        $inventario =$this->em
         ->getRepository(Inventario::class)
         ->findAll();
-    
         $response = array();
         foreach ($inventario as $inv) {
             $ip = "Sin asginar ip";
@@ -46,126 +45,103 @@ class InventarioController extends AbstractController
                 $ip
             );
         }
-        
             return $this->render('inventario/index.html.twig', [
             'response' => json_encode($response),
-            'button' => '<button>hola</button>',
         ]);
     }
-
     /**
      * @Route("/inventario/create" , name="createInventario")
-     *
-     * 
      */
     public function create(Request $request){
-        
-
         $form = $this->createForm(NewInventaryType::class, new Inventario);
         $form->handleRequest($request); 
         if($form->isSubmitted() && $form->isValid()){
-            $entityManager = $this->getDoctrine()->getManager();
-            
-            $brand = $form['brand_inventory']->getData(); 
+            $brand = $form['brand_inventory']->getData();
             $model = $form['model_inventory']->getData(); 
             $mac   = $form['mac_inventory']->getData();
-            $type  = $form['type_inventory']->getData(); 
-            if($brand == null || $model == null || $mac == null || $type == null){
-                $error = "Error de ambos";
-            }else{
+            $type  = $form['type_inventory']->getData();
+            $flag = true;
+            $msg = "";
+            if($brand == null || $model == null || $mac == null || $type == null){$flag = false;$msg = "Algun dato no esta escrito correctamente";}
+            if($flag){
                 $in = new Inventario();
                 $in->setMacInventory($mac);
                 $in->setTypeInventory($type);
                 $in->setModelInventory($model); 
-                $in->setBrandInventory($brand); 
-                $entityManager->persist($in);
+                $in->setBrandInventory($brand);
+                $this->em ->persist($in);
                 try{
-                    $entityManager->flush();
-                    return new JsonResponse(array(
-                        'status' => true,
-                        'msg' => 'Se ha registrado con exito!'
-                    ));
+                    $this->em ->flush();
+                    $msg = "Se ha realizado correctamente";
                 }catch(\Exception $e) {
-                    $message = $e->getMessage();
+                    $msg = $e->getMessage();
                 }
-
             }
+            return new JsonResponse(array(
+                'status' => $flag,
+                'msg' => $msg
+            ));
         }
         return $this->render('inventario/create.html.twig', [
             'form' => $form->createView(),
         ]);
     }
-
     /**
      * @Route("/inventario/edit/{id}" , name="editInventario")
-     *
-     * 
      */
     public function edit($id, Request  $request){
         $form = $this->createForm(InventaryType::class, new Inventario());
-        $inv = $this->getDoctrine()->getRepository(Inventario::class)->findOneBy([
+        $inv = $this->em->getRepository(Inventario::class)->findOneBy([
             'id' => $id
         ]);
         $form->handleRequest($request);
         if($form->isSubmitted() && $form->isValid()){
-            $con = $this->getDoctrine()->getManager();
             $brand = $form['brand_inventory']->getData();
             $model = $form['model_inventory']->getData();
-            $mac = $form['mac_inventory']->getData();
+            $mac   = $form['mac_inventory']->getData();
             $radio = $form['type_inventory']->getData();
-            if($brand == null || $model == null || $mac == null || $radio == null){
-                return new JsonResponse([
-                    'status' => false,
-                    'msg' => "Algun dato no esta escrito correctamente"
-                ]);
-            }else{
-                $v = $this->getDoctrine()->getRepository(Inventario::class)->checkDuplicatedMac($id, $mac);
-                if(count($v) > 0){
-                    return new JsonResponse([
-                        'status' => false,
-                        'msg' => "Existe una MAC igual en el sistema"
-                    ]);
-                }else{
+            $flag = true;
+            $msg = "";
+            if($brand == null || $model == null || $mac == null || $radio == null){$flag = false;$msg = "Algun dato no esta escrito correctamente";}
+            if(!filter_var($mac, FILTER_VALIDATE_MAC)){ $flag=false; $msg = "No es valido esa Mac proporcionada"; }
+            if($flag) {
+                $v = $this->em->getRepository(Inventario::class)->checkDuplicatedMac($id, $mac);
+                if (count($v) > 0) {
+                       $flag= false;
+                       $msg = "Existe una MAC igual en el sistema";
+                } else {
                     $inv->setBrandInventory($brand);
                     $inv->setModelInventory($model);
                     $inv->setMacInventory($mac);
                     $inv->setTypeInventory($radio);
-                    $con->persist($inv);
-                    try{
-                        $con->flush();
-                        return new JsonResponse([
-                            'status' => true,
-                            'msg' => "Se ha realizado con exito la actualizacion"
-                        ]);
-                    }catch(\Exception $e){
-                        $message = $e->getMessage();
+                    $this->em ->persist($inv);
+                    try {
+                        $this->em ->flush();
+                        $msg = "Se ha realizado con exito la actualizacion";
+                    } catch (\Exception $e) {
+                        $msg = $e->getMessage();
                     }
                 }
             }
+            return new JsonResponse([
+                'status' => $flag,
+                'msg' => $msg
+            ]);
         }
         return $this->render('inventario/edit.html.twig', [
-            'brand' => 'asdasdasd', 
-            'model' => 'asf', 
             'id' => $id,
             'form' => $form->createView(),
             'brand' => $inv->getBrandInventory(),
             'type' => $inv->getTypeInventory(),
             'model' => $inv->getModelInventory(),
             'mac' => $inv->getMacInventory()
-
-
         ]);
     }
-
     /**
      * @Route("/inventario/assign/{id}", name="assignInventario")
      * 
      */
-
      public function assign($id){
-         return $this->render('inventario/assign.html.twig'); 
-
+         return $this->render('inventario/assign.html.twig');
      }
-
-
 }
