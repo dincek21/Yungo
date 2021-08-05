@@ -61,7 +61,7 @@
 function ventana(){
         $.ajax({
                 type: 'POST',
-                url: '/usuario/editphoto',
+                url: '/usuario/editphoto/{{id}}',
                 dataType: 'json',
                 success: function(response) {
                             $.sweetModal({

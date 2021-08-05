@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Request;
 class UsuarioController extends AbstractController
 {
     /**
-     * @Route("/usuario/create", name="create_user")
+     * @Route("/usuario/crear", name="create_user")
      */
     public function createuser(Request $request)
     {
@@ -28,7 +28,7 @@ class UsuarioController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var UploadedFile $brochureFile */
             $img = $form['picture_user']->getData();
-            if($img){
+            if($img->guessExtension() == 'jpg' || $img->guessExtension() == 'jpeg'){
                 $originalFilename = pathinfo($img->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeFilename = transliterator_transliterate('Any-Latin; Latin-ASCII; [^A-Za-z0-9_] remove; Lower()', $originalFilename);
                 $newFilename = $safeFilename.'-'.uniqid().'.'.$img->guessExtension();
@@ -68,7 +68,7 @@ class UsuarioController extends AbstractController
 
 
     /**
-     * @Route("/usuario/personal/{id}", name="usuario")
+     * @Route("/usuario/{id}", name="usuario")
      */
     public function usuario($id,Request $request)
     {
@@ -138,26 +138,6 @@ class UsuarioController extends AbstractController
             ]),
         ]); 
         
-    }
-
-    /**
-     * @Route("/usuario/consult", name="consultas")
-     */
-    public function consult($id, Request $request)
-    {
-        $users = $this->getDoctrine()
-        ->getRepository(Usuario::class)
-        ->findOneBy(['id' => $id]);
-
-        return $this->render('usuario/consult.html.twig', [
-            'id'        => $id,
-            'name'      => $users->getNameUser()." ".$users->getLastnameUser(),
-            'age'       => $users->getAgeUser(),
-            'email'     => $users->getEmailUser(),
-            'rol'       => $users->getFkRoles()->getrols(),
-            'gender'    => $users->getFkGender()->getGenders(),
-            'picture'   => $users->getPictureUser(),
-        ]);
     }
 
 }

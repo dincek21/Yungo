@@ -1,7 +1,8 @@
 <div>
+<p>Solo se admiten fotografias con el formato (.jpg) y (.jepg)<p>
 {{ form_start(form, {'attr' : { 'id' : 'form-changephoto'}}) }}
 {{ form_end(form) }}
-</di>
+</div>
 
 <script>
 
@@ -11,7 +12,7 @@
         $.sweetModal.confirm('Confirmacion', '¿Estas seguro?', function() {
             $.ajax({
                 type: 'POST',
-                url: '{{path('photo_new')}}',
+                url: '{{path('photo_new', {id:id}) }}',
                 processData: false,
                 cache: false,
                 contentType: false,
@@ -28,7 +29,10 @@
 
                         });
                     }else if(response.status == false){
-
+                        $.sweetModal({
+                        content: 'Formato de imagen no aceptado, intenta con formato "jpg" o "jpeg".',
+                        icon: $.sweetModal.ICON_ERROR,
+                    });
                     }
                 },
             });

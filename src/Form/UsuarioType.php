@@ -28,32 +28,37 @@ class UsuarioType extends AbstractType
         $builder
             ->add('name_user', TextType::class,[
                 'attr' => [
-                    'placeholder' => 'Usuario'
+                    'style'=> 'width: 150px;',
+                    'placeholder' => ' Usuario'
                 ],  'label' => false
             ])
             ->add('lastname_user', TextType::class,[
                 'attr' => [
-                    'placeholder' => 'Apellidos'
+                    'style'=> 'width: 150px;',
+                    'placeholder' => ' Apellidos'
                 ],  'label' => false
             ])
             ->add('age_user', IntegerType::class,[
                 'attr' => [
-                    'placeholder' => 'Edad'
+                    'style'=> 'width: 75px;',
+                    'placeholder' => ' Edad'
                 ],  'label' => false
             ])
             ->add('picture_user', FileType::class,[  
-                'label' => false,
+                'label' => 'Fotografia:',
                 'mapped' => false,
                 'required' => false,
                 ])
             ->add('email_user', EmailType::class,[
                 'attr' => [
-                    'placeholder' => 'Email'
+                    'style'=> 'width: 230px;',
+                    'placeholder' => ' Email'
                 ],  'label' => false
             ])
             ->add('pass_user', PasswordType::class,[
                 'attr' => [
-                    'placeholder' => 'Contraseña'
+                    'placeholder' => ' Contraseña',
+                    'style' => 'width: 230px',
                 ],  'label' => false
             ])
             ->add('fkRoles', EntityType::class,  [
@@ -63,7 +68,7 @@ class UsuarioType extends AbstractType
                         ->orderBy('u.rols', 'ASC');
                 },
                 'choice_label' => 'rols',
-                'label' => 'Rol'
+                'label' => ' Rol:'
             ])
             ->add('fkGender', EntityType::class, [
                 'class' => Genders::class,
@@ -71,11 +76,14 @@ class UsuarioType extends AbstractType
                     return $er->createQueryBuilder('u')
                         ->orderBy('u.genders', 'ASC');
                 },
+                'attr' => [
+                    'style' => 'width: 90px',
+                ],
                 'choice_label' => 'genders',
-                'label' => 'Genero'
+                'label' => 'Sexo:',
             ])
             ->add('Send', SubmitType::class, [
-                'label' => 'Enviar',
+                'label' => 'Registrar',
                 'attr' => ['class' => 'btn btn-default pull-right rounded md:mt-0 md:col-start-1 col-end-4 text-black-500 border-red-500 hover:bg-gray-300 border-double border-4'],
                 ]);
     }
